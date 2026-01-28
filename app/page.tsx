@@ -67,9 +67,9 @@ export default function Home() {
       </div>
       {/* Cards Section */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 mt-12 z-10 mx-auto max-w-6xl">
-          <Card value="Food" image="/images/noise-1.jpg" />
-          <Card value="Accessories" image="/images/noise-2.jpg" />
-          <Card value="Games" image="/images/noise-3.jpg" />
+          <Card value="Food" image="/images/food.png" />
+          <Card value="Accessories" image="/images/accessories.png" />
+          <Card value="Games" image="/images/games.png" />
         </div>
       </div>
     </div>
