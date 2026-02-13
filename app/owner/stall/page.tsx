@@ -363,7 +363,7 @@ export default function StallOwnerPage() {
         if (!isActive) return;
         if (data?.stall) {
           setSlugStatus("taken");
-          setSlugMessage("Slug already taken.");
+          setSlugMessage("Short link already taken.");
         } else {
           setSlugStatus("available");
           setSlugMessage(null);
@@ -526,7 +526,7 @@ export default function StallOwnerPage() {
 
     try {
       if (slugStatus === "taken") {
-        setStatusMessage("Slug already taken. Choose another.");
+        setStatusMessage("Short link already taken. Choose another.");
         setIsSubmitting(false);
         return;
       }
@@ -580,7 +580,7 @@ export default function StallOwnerPage() {
       if (!response.ok) {
         const errorBody = await response.json().catch(() => null);
         if (response.status === 409) {
-          setStatusMessage("Slug already taken. Choose another.");
+          setStatusMessage("Short link already taken. Choose another.");
         } else {
           setStatusMessage(errorBody?.error || "Failed to save details.");
         }
@@ -734,7 +734,7 @@ export default function StallOwnerPage() {
                 </div>
                 <div>
                   <label className="text-sm font-medium text-neutral-700" htmlFor="slug">
-                    Slug *
+                    Short link *
                   </label>
                   <input
                     id="slug"
@@ -744,6 +744,9 @@ export default function StallOwnerPage() {
                     placeholder="spicy-bites"
                     className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3 text-sm shadow-sm focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
                   />
+                  <small className="mt-2 block text-xs text-neutral-500">
+                    This becomes the web address for your stall (letters, numbers, and dashes only).
+                  </small>
                   <p className={`mt-2 text-xs ${
                     slugStatus === "taken"
                       ? "text-red-600"
