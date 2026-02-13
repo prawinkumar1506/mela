@@ -156,12 +156,15 @@ export default function StallOwnerPage() {
   const router = useRouter();
   const [formValues, setFormValues] = useState(initialFormState);
   const [ownerEmail, setOwnerEmail] = useState<string | null>(null);
+  const [originalSlug, setOriginalSlug] = useState<string | null>(null);
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
   const [bannerUrl, setBannerUrl] = useState<string | null>(null);
   const [bannerStatus, setBannerStatus] = useState<"idle" | "uploading" | "done" | "error">("idle");
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [logoStatus, setLogoStatus] = useState<"idle" | "uploading" | "done" | "error">("idle");
+  const [slugStatus, setSlugStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
+  const [slugMessage, setSlugMessage] = useState<string | null>(null);
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
   const galleryItemsRef = useRef<GalleryItem[]>([]);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -280,6 +283,10 @@ export default function StallOwnerPage() {
               paymentMethods: paymentMethodsValue.join(", "),
             });
 
+            if (payload.slug) {
+              setOriginalSlug(payload.slug.trim().toLowerCase());
+            }
+
             if (payload.bannerImage) setBannerUrl(payload.bannerImage);
             if (payload.logoImage) setLogoUrl(payload.logoImage);
             if (payload.images?.length) {
@@ -328,6 +335,51 @@ export default function StallOwnerPage() {
       galleryItemsRef.current.forEach((item) => revokeIfBlob(item.previewUrl));
     };
   }, []);
+
+  useEffect(() => {
+    const nextSlug = formValues.slug.trim().toLowerCase();
+    if (!nextSlug) {
+      setSlugStatus("idle");
+      setSlugMessage(null);
+      return;
+    }
+
+    if (originalSlug && nextSlug === originalSlug) {
+      setSlugStatus("available");
+      setSlugMessage(null);
+      return;
+    }
+
+    setSlugStatus("checking");
+    setSlugMessage(null);
+    let isActive = true;
+    const timer = setTimeout(async () => {
+      try {
+        const response = await fetch(`/api/public/stalls/${encodeURIComponent(nextSlug)}`);
+        if (!response.ok) {
+          throw new Error("Failed to validate slug");
+        }
+        const data = await response.json();
+        if (!isActive) return;
+        if (data?.stall) {
+          setSlugStatus("taken");
+          setSlugMessage("Slug already taken.");
+        } else {
+          setSlugStatus("available");
+          setSlugMessage(null);
+        }
+      } catch {
+        if (!isActive) return;
+        setSlugStatus("idle");
+        setSlugMessage(null);
+      }
+    }, 400);
+
+    return () => {
+      isActive = false;
+      clearTimeout(timer);
+    };
+  }, [formValues.slug, originalSlug]);
 
   const getAccessToken = async () => {
     const supabase = createBrowserSupabaseClient();
@@ -473,6 +525,12 @@ export default function StallOwnerPage() {
     setIsSubmitting(true);
 
     try {
+      if (slugStatus === "taken") {
+        setStatusMessage("Slug already taken. Choose another.");
+        setIsSubmitting(false);
+        return;
+      }
+
       if (!bannerUrl) {
         setStatusMessage("Please upload a banner image before saving.");
         setIsSubmitting(false);
@@ -521,7 +579,11 @@ export default function StallOwnerPage() {
 
       if (!response.ok) {
         const errorBody = await response.json().catch(() => null);
-        setStatusMessage(errorBody?.error || "Failed to save details.");
+        if (response.status === 409) {
+          setStatusMessage("Slug already taken. Choose another.");
+        } else {
+          setStatusMessage(errorBody?.error || "Failed to save details.");
+        }
         return;
       }
 
@@ -682,6 +744,17 @@ export default function StallOwnerPage() {
                     placeholder="spicy-bites"
                     className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3 text-sm shadow-sm focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
                   />
+                  <p className={`mt-2 text-xs ${
+                    slugStatus === "taken"
+                      ? "text-red-600"
+                      : slugStatus === "checking"
+                        ? "text-neutral-400"
+                        : "text-neutral-500"
+                  }`}>
+                    {slugStatus === "checking"
+                      ? "Checking availability..."
+                      : slugMessage ?? "Keep it short and unique."}
+                  </p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-neutral-700" htmlFor="category">
@@ -1059,7 +1132,7 @@ export default function StallOwnerPage() {
               <div className="mt-4 space-y-3">
                 <button
                   type="submit"
-                  disabled={isSubmitting || isUploading}
+                  disabled={isSubmitting || isUploading || slugStatus === "taken" || slugStatus === "checking"}
                   className="w-full rounded-xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(255,140,0,0.3)] transition-transform hover:scale-[1.01] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   {isSubmitting ? "Saving..." : "Save stall details"}

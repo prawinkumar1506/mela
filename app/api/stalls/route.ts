@@ -104,6 +104,28 @@ async function saveSubmission(payload: StallSubmission, email: string) {
   const normalizedSlug = payload.slug.trim().toLowerCase();
   const normalizedPayload = { ...payload, slug: normalizedSlug };
 
+  const { data: existingSlug, error: existingSlugError } = await supabase
+    .from("stall_submissions")
+    .select("owner_email")
+    .eq("stall_slug", normalizedSlug)
+    .neq("owner_email", email)
+    .limit(1)
+    .maybeSingle();
+
+  if (existingSlugError) {
+    return NextResponse.json(
+      { error: "Failed to validate slug", details: existingSlugError.message },
+      { status: 500 }
+    );
+  }
+
+  if (existingSlug) {
+    return NextResponse.json(
+      { error: "Slug already taken" },
+      { status: 409 }
+    );
+  }
+
   await supabase
     .from("stall_submissions")
     .delete()
