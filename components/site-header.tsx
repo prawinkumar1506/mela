@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Menu, X, Home, Utensils, Gamepad2, Gem, User } from "lucide-react";
+import { Menu, X, Home, Utensils, Gamepad2, Gem, User, Users } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
@@ -13,6 +13,7 @@ const navItems = [
     { name: "Food", href: "/food", icon: Utensils },
     { name: "Accessories", href: "/accessories", icon: Gem },
     { name: "Games", href: "/games", icon: Gamepad2 },
+    { name: "Clubs", href: "/clubs", icon: Users },
 ];
 
 export function SiteHeader() {

@@ -80,14 +80,30 @@ async function getRequestContext(request: NextRequest) {
     };
   }
 
-  // Check allowlist
-  const { data: allowed, error: allowError } = await supabase
-    .from("allowed_owners")
-    .select("email")
-    .eq("email", email)
-    .maybeSingle();
+  // Check allowlist (owners or clubs)
+  const [ownerResult, clubResult] = await Promise.all([
+    supabase
+      .from("allowed_owners")
+      .select("email")
+      .eq("email", email)
+      .maybeSingle(),
+    supabase
+      .from("allowed_clubs")
+      .select("email")
+      .eq("email", email)
+      .maybeSingle(),
+  ]);
 
-  if (allowError || !allowed) {
+  if (ownerResult.error || clubResult.error) {
+    return {
+      response: NextResponse.json(
+        { error: "Failed to verify email" },
+        { status: 500 }
+      ),
+    };
+  }
+
+  if (!ownerResult.data && !clubResult.data) {
     return {
       response: NextResponse.json(
         { error: "Email not authorized" },

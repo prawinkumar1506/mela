@@ -152,7 +152,7 @@ export default function Home() {
             </div>
             <input
               type="text"
-              placeholder="Search for food, games, or accessories..."
+              placeholder="Search for food, games, accessories, or clubs..."
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               className="w-full pl-12 pr-4 py-4 text-base bg-white border border-gray-200 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:border-transparent transition-all"
@@ -208,11 +208,12 @@ export default function Home() {
 
       </div>
       {/* Cards Section */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 mt-12 z-10 mx-auto max-w-6xl">
-          <Card value="Food" image="/images/food.png" />
-          <Card value="Accessories" image="/images/accessories.png" />
-          <Card value="Games" image="/images/games.png" />
-        </div>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-4 mt-12 z-10 mx-auto max-w-6xl">
+            <Card value="Food" image="/images/food.png" />
+            <Card value="Accessories" image="/images/accessories.png" />
+            <Card value="Games" image="/images/games.png" />
+            <Card value="Clubs" image="/images/food.png" />
+          </div>
       </div>
     </div>
   )

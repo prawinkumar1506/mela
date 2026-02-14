@@ -21,15 +21,22 @@ serve(async (req: Request): Promise<Response> => {
 
     const email = user.email.toLowerCase();
 
-    // Check if email is in allowlist
-    const { data: allowed, error: checkError } = await supabase
-      .from("allowed_owners")
-      .select("email")
-      .eq("email", email)
-      .maybeSingle();
+    // Check if email is in allowlist (owners or clubs)
+    const [ownerResult, clubResult] = await Promise.all([
+      supabase
+        .from("allowed_owners")
+        .select("email")
+        .eq("email", email)
+        .maybeSingle(),
+      supabase
+        .from("allowed_clubs")
+        .select("email")
+        .eq("email", email)
+        .maybeSingle(),
+    ]);
 
-    if (checkError) {
-      console.error("Allowlist check error:", checkError);
+    if (ownerResult.error || clubResult.error) {
+      console.error("Allowlist check error:", ownerResult.error || clubResult.error);
       return new Response(
         JSON.stringify({ error: "Internal error" }),
         { status: 500, headers: { "Content-Type": "application/json" } }
@@ -37,7 +44,7 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     // If email not in allowlist, deny
-    if (!allowed) {
+    if (!ownerResult.data && !clubResult.data) {
       return new Response(
         JSON.stringify({
           error: "for that you have to put stall next year bye bye 👋",
