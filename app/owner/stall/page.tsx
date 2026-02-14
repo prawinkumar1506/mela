@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
-import { ALLOWED_OWNER_EMAILS } from "@/lib/auth/allowlist";
 
 const initialFormState = {
   name: "",
