@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "r
 import { useRouter } from "next/navigation";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { ALLOWED_OWNER_EMAILS } from "@/lib/auth/allowlist";
+import { ItemCard } from "./ItemCard";
 
 const initialFormState = {
   name: "",
@@ -156,6 +157,7 @@ export default function StallOwnerPage() {
   const router = useRouter();
   const [formValues, setFormValues] = useState(initialFormState);
   const [ownerEmail, setOwnerEmail] = useState<string | null>(null);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([{ name: "", price: "" }]);
   const [originalSlug, setOriginalSlug] = useState<string | null>(null);
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
   const [bannerUrl, setBannerUrl] = useState<string | null>(null);
@@ -193,6 +195,31 @@ export default function StallOwnerPage() {
     return url;
   };
 
+  const handleMenuItemChange = (
+    index: number,
+    field: "name" | "price",
+    value: string
+  ) => {
+    setMenuItems((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: value };
+      return next;
+    });
+  };
+
+  const addMenuItem = () => {
+    setMenuItems((prev) => [...prev, { name: "", price: "" }]);
+  };
+
+  const removeMenuItem = (index: number) => {
+    setMenuItems((prev) => (prev.length === 1 ? prev : prev.filter((_, i) => i !== index)));
+  };
+
+  const normalizeMenuItems = (items: MenuItem[]) =>
+    items
+      .map((i) => ({ name: i.name.trim(), price: i.price.trim() }))
+      .filter((i) => i.name.length > 0 && i.price.length > 0);
+
   useEffect(() => {
     const loadSession = async () => {
       try {
@@ -216,7 +243,7 @@ export default function StallOwnerPage() {
         if (response.status === 403) {
           // Email not in allowlist
           await supabase.auth.signOut();
-          setStatusMessage("for that you have to put stall next year bye bye 👋");
+          setStatusMessage("For that you have to put a stall. See you next year bye bye 👋");
           setOwnerEmail(null);
           setIsLoading(false);
           return;
@@ -259,9 +286,9 @@ export default function StallOwnerPage() {
               ownerPhone: payload.ownerPhone ?? "",
               instagram: payload.instagram ?? "",
               stallNumber: payload.stallNumber ?? "",
-              items: itemsValue
-                .map((item) => `${item.name} - ${item.price}`)
-                .join("\n"),
+              // items: itemsValue
+              //   .map((item) => `${item.name} - ${item.price}`)
+              //   .join("\n"),
               highlights: highlightsValue.join(", "),
               bestSellers: bestSellersValue.join(", "),
               offers: offersValue.join(", "),
@@ -282,6 +309,8 @@ export default function StallOwnerPage() {
                 .join("\n"),
               paymentMethods: paymentMethodsValue.join(", "),
             });
+
+            setMenuItems(itemsValue.length ? itemsValue : [{ name: "", price: "" }]);
 
             if (payload.slug) {
               setOriginalSlug(payload.slug.trim().toLowerCase());
@@ -557,7 +586,7 @@ export default function StallOwnerPage() {
         ownerName: formValues.ownerName.trim(),
         ownerPhone: formValues.ownerPhone.trim(),
         instagram: formValues.instagram.trim() || undefined,
-        items: parseItems(formValues.items),
+        items: normalizeMenuItems(menuItems),
         highlights: parseCsv(formValues.highlights),
         bestSellers: parseCsv(formValues.bestSellers),
         offers: parseCsv(formValues.offers),
@@ -623,6 +652,7 @@ export default function StallOwnerPage() {
 
       setStatusMessage("Submission deleted.");
       setFormValues(initialFormState);
+      setMenuItems([{ name: "", price: "" }]);
       setBannerUrl(null);
       setLogoUrl(null);
       setGalleryItems([]);
@@ -729,11 +759,11 @@ export default function StallOwnerPage() {
                     value={formValues.name}
                     onChange={handleInputChange}
                     placeholder="Spicy Bites"
-                    className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3 text-sm shadow-sm focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
+                    className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3 text-sm shadow-sm focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100 text-neutral-900"
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-neutral-700" htmlFor="slug">
+                  <label className="text-sm font-medium text-neutral-900" htmlFor="slug">
                     Short link *
                   </label>
                   <input
@@ -742,7 +772,7 @@ export default function StallOwnerPage() {
                     value={formValues.slug}
                     onChange={handleInputChange}
                     placeholder="spicy-bites"
-                    className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3 text-sm shadow-sm focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
+                    className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3 text-sm shadow-sm focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100 text-neutral-900"
                   />
                   <small className="mt-2 block text-xs text-neutral-500">
                     This becomes the web address for your stall (letters, numbers, and dashes only).
@@ -768,7 +798,7 @@ export default function StallOwnerPage() {
                     name="category"
                     value={formValues.category}
                     onChange={handleInputChange}
-                    className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3 text-sm shadow-sm focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
+                    className="mt-2 w-full rounded-xl text-neutral-900 border border-neutral-200 px-4 py-3 text-sm shadow-sm focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
                   >
                     <option value="food">Food</option>
                     <option value="accessories">Accessories</option>
@@ -785,7 +815,7 @@ export default function StallOwnerPage() {
                     value={formValues.stallNumber}
                     onChange={handleInputChange}
                     placeholder="F-04"
-                    className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3 text-sm shadow-sm focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
+                    className="mt-2 w-full rounded-xl text-neutral-900 border border-neutral-200 px-4 py-3 text-sm shadow-sm focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
                   />
                 </div>
               </div>
@@ -803,7 +833,7 @@ export default function StallOwnerPage() {
                   onChange={handleInputChange}
                   rows={3}
                   placeholder="Tell visitors what makes your stall special."
-                  className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3 text-sm shadow-sm focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
+                  className="mt-2 w-full rounded-xl text-neutral-900 border border-neutral-200 px-4 py-3 text-sm shadow-sm focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
                 />
               </div>
             </div>
@@ -821,7 +851,7 @@ export default function StallOwnerPage() {
                     value={formValues.ownerName}
                     onChange={handleInputChange}
                     placeholder="Rajesh Kumar"
-                    className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3 text-sm shadow-sm focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
+                    className="mt-2 w-full rounded-xl text-neutral-900 border border-neutral-200 px-4 py-3 text-sm shadow-sm focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
                   />
                 </div>
                 <div>
@@ -834,7 +864,7 @@ export default function StallOwnerPage() {
                     value={formValues.ownerPhone}
                     onChange={handleInputChange}
                     placeholder="+91 98765 43210"
-                    className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3 text-sm shadow-sm focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
+                    className="mt-2 w-full rounded-xl text-neutral-900 border border-neutral-200 px-4 py-3 text-sm shadow-sm focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
                   />
                 </div>
                 <div>
@@ -847,7 +877,7 @@ export default function StallOwnerPage() {
                     value={formValues.instagram}
                     onChange={handleInputChange}
                     placeholder="@spicybites_official"
-                    className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3 text-sm shadow-sm focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
+                    className="mt-2 w-full rounded-xl text-neutral-900 border border-neutral-200 px-4 py-3 text-sm shadow-sm focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
                   />
                 </div>
                 <div>
@@ -860,7 +890,7 @@ export default function StallOwnerPage() {
                     value={formValues.paymentMethods}
                     onChange={handleInputChange}
                     placeholder="UPI, Cash, GPay"
-                    className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3 text-sm shadow-sm focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
+                    className="mt-2 w-full rounded-xl text-neutral-900 border border-neutral-200 px-4 py-3 text-sm shadow-sm focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
                   />
                 </div>
               </div>
@@ -870,19 +900,38 @@ export default function StallOwnerPage() {
               <h2 className="text-xl font-semibold text-neutral-900">Menu and extras</h2>
               <div className="mt-4 space-y-4">
                 <div>
-                  <label className="text-sm font-medium text-neutral-700" htmlFor="items">
-                    Items (name - price, one per line)
-                  </label>
-                  <textarea
-                    id="items"
-                    name="items"
-                    value={formValues.items}
-                    onChange={handleInputChange}
-                    rows={3}
-                    placeholder="Pani Puri - 50"
-                    className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3 text-sm shadow-sm focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
-                  />
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-neutral-700">
+                      Items
+                    </label>
+
+                    <button
+                      type="button"
+                      onClick={addMenuItem}
+                      className="rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-xs font-semibold text-neutral-700 shadow-sm transition hover:border-orange-300 hover:text-orange-600"
+                    >
+                      + Add item
+                    </button>
+                  </div>
+
+                  <div className="mt-3 space-y-3">
+                    {menuItems.map((item, index) => (
+                      <ItemCard
+                        key={index}
+                        item={item}
+                        index={index}
+                        onChange={handleMenuItemChange}
+                        onRemove={removeMenuItem}
+                        canRemove={menuItems.length > 1}
+                      />
+                    ))}
+                  </div>
+
+                  <p className="mt-2 text-xs text-neutral-500">
+                    Add one item per row. No formatting needed.
+                  </p>
                 </div>
+
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div>
                     <label className="text-sm font-medium text-neutral-700" htmlFor="highlights">
@@ -895,7 +944,7 @@ export default function StallOwnerPage() {
                       onChange={handleInputChange}
                       rows={2}
                       placeholder="Comma-separated highlights"
-                      className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3 text-sm shadow-sm focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
+                      className="mt-2 w-full text-neutral-900 rounded-xl border border-neutral-200 px-4 py-3 text-sm shadow-sm focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
                     />
                   </div>
                   <div>
@@ -909,7 +958,7 @@ export default function StallOwnerPage() {
                       onChange={handleInputChange}
                       rows={2}
                       placeholder="Comma-separated items"
-                      className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3 text-sm shadow-sm focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
+                      className="mt-2 w-full text-neutral-900 rounded-xl border border-neutral-200 px-4 py-3 text-sm shadow-sm focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
                     />
                   </div>
                 </div>
@@ -925,7 +974,7 @@ export default function StallOwnerPage() {
                       onChange={handleInputChange}
                       rows={2}
                       placeholder="Comma-separated offers"
-                      className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3 text-sm shadow-sm focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
+                      className="mt-2 w-full text-neutral-900 rounded-xl border border-neutral-200 px-4 py-3 text-sm shadow-sm focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
                     />
                   </div>
                   <div>
@@ -939,7 +988,7 @@ export default function StallOwnerPage() {
                       onChange={handleInputChange}
                       rows={2}
                       placeholder="Events or locations"
-                      className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3 text-sm shadow-sm focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
+                      className="mt-2 w-full text-neutral-900 rounded-xl border border-neutral-200 px-4 py-3 text-sm shadow-sm focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
                     />
                   </div>
                 </div>
@@ -954,7 +1003,7 @@ export default function StallOwnerPage() {
                     onChange={handleInputChange}
                     rows={3}
                     placeholder="Aditi S. - 5 - Best pani puri"
-                    className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3 text-sm shadow-sm focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
+                    className="mt-2 w-full text-neutral-900 rounded-xl border border-neutral-200 px-4 py-3 text-sm shadow-sm focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
                   />
                 </div>
                 <div>
@@ -968,7 +1017,7 @@ export default function StallOwnerPage() {
                     onChange={handleInputChange}
                     rows={3}
                     placeholder="Weekend Combo - Discounted snack box - 2026-03-01"
-                    className="mt-2 w-full rounded-xl border border-neutral-200 px-4 py-3 text-sm shadow-sm focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
+                    className="mt-2 w-full text-neutral-900 rounded-xl border border-neutral-200 px-4 py-3 text-sm shadow-sm focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
                   />
                 </div>
               </div>
