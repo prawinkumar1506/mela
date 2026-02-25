@@ -5,7 +5,6 @@ import Link from "next/link"
 import { ImageTrail } from "@/components/ui/image-trail"
 import { Search } from "lucide-react"
 import Image from "next/image"
-import Card from "@/components/mela-cards"
 
 export default function Home() {
   const ref = useRef<HTMLDivElement>(null)
@@ -207,13 +206,19 @@ export default function Home() {
         
 
       </div>
-      {/* Cards Section */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-4 mt-12 z-10 mx-auto max-w-6xl">
-            <Card value="Food" image="/images/food.png" />
-            <Card value="Accessories" image="/images/accessories.png" />
-            <Card value="Games" image="/images/games.png" />
-            <Card value="Clubs" image="/images/food.png" />
+      {/* Featured Stall Image */}
+        <div className="mt-16 z-10 mx-auto max-w-6xl w-full px-4">
+          <div className="relative w-full overflow-hidden rounded-2xl shadow-2xl">
+            <Image
+              src="/stall.jpeg"
+              alt="Mela Stall"
+              width={1920}
+              height={1080}
+              className="w-full h-auto object-cover"
+              priority
+            />
           </div>
+        </div>
       </div>
     </div>
   )
